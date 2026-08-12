@@ -24,6 +24,12 @@
     </head>
     <body>
         <div id="map">
+		<!-- Elemen Input Koordinat -->
+		<div id="koordinat-input-box" style="position: absolute; top: 10px; left: 60px; z-index: 1000; background: white; padding: 10px; border-radius: 5px; box-shadow: 0 1px 5px rgba(0,0,0,0.65); font-family: sans-serif;">
+   		<h4 style="margin: 0 0 5px 0; font-size: 14px;">Input Titik Koordinat</h4>
+    	<input type="text" id="input-lat" placeholder="Latitude (Lintang), contoh: -6.20" style="width: 180px; margin-bottom: 5px; padding: 3px; display: block;">
+    	<input type="text" id="input-lng" placeholder="Longitude (Bujur), contoh: 106.81" style="width: 180px; margin-bottom: 5px; padding: 3px; display: block;">
+    	<button onclick="cariKoordinat()" style="width: 100%; padding: 5px; background: #0078A8; color: white; border: none; border-radius: 3px; cursor: pointer;">Cari Titik</button>
         </div>
         <script src="js/qgis2web_expressions.js"></script>
         <script src="js/leaflet.js"></script>
@@ -864,6 +870,35 @@
         });
         lay.addTo(map);
         setBounds();
-        </script>        
+        // Membuat variabel penampung tanda (marker) agar bisa dihapus saat mencari titik baru
+	var markerPencarian = null;
+	function cariKoordinat() {
+    	// Mengambil nilai dari kotak input
+    	var latInput = document.getElementById('input-lat').value;
+    	var lngInput = document.getElementById('input-lng').value;
+    	// Mengubah teks input menjadi angka desimal
+    	var lat = parseFloat(latInput);
+    	var lng = parseFloat(lngInput);
+    	// Validasi apakah input berupa angka yang benar
+    	if (isNaN(lat) || isNaN(lng)) {
+        alert("Mohon masukkan format koordinat angka yang valid!");
+        return;
+    	}
+    	// Rentang validasi koordinat dunia (Latitude -90 s/d 90, Longitude -180 s/d 180)
+    	if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        alert("Nilai koordinat di luar jangkauan peta dunia!");
+        return;
+    	}
+    	// Jika sebelumnya sudah ada marker pencarian, hapus dulu dari peta
+    	if (markerPencarian !== null) {
+        map.removeLayer(markerPencarian);
+    	}
+    	// 1. Arahkan dan perbesar peta ke lokasi koordinat baru (Zoom level: 15)
+    	map.setView([lat, lng], 15);
+    	// 2. Tambahkan marker baru di titik tersebut beserta teks info (Popup)
+    	markerPencarian = L.marker([lat, lng]).addTo(map);
+    	markerPencarian.bindPopup("<b>Titik Koordinat Input:</b><br>Lat: " + lat + "<br>Lng: " + lng).openPopup();
+		}
+		</script>        
     </body>
 </html>
