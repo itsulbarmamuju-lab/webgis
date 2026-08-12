@@ -24,12 +24,12 @@
     </head>
     <body>
         <div id="map">
-		<!-- Elemen Input Koordinat -->
+		<!-- Elemen Input Koordinat DMS -->
 		<div id="koordinat-input-box" style="position: absolute; top: 10px; left: 60px; z-index: 1000; background: white; padding: 10px; border-radius: 5px; box-shadow: 0 1px 5px rgba(0,0,0,0.65); font-family: sans-serif;">
-   		<h4 style="margin: 0 0 5px 0; font-size: 14px;">Input Titik Koordinat</h4>
-    	<input type="text" id="input-lat" placeholder="Latitude (Lintang), contoh: -6.20" style="width: 180px; margin-bottom: 5px; padding: 3px; display: block;">
-    	<input type="text" id="input-lng" placeholder="Longitude (Bujur), contoh: 106.81" style="width: 180px; margin-bottom: 5px; padding: 3px; display: block;">
-    	<button onclick="cariKoordinat()" style="width: 100%; padding: 5px; background: #0078A8; color: white; border: none; border-radius: 3px; cursor: pointer;">Cari Titik</button>
+    	<h4 style="margin: 0 0 5px 0; font-size: 14px;">Input Koordinat (DMS Spasi)</h4>
+    	<input type="text" id="input-lat" placeholder="Lat DMS (contoh: -6 10 31.4)" style="width: 200px; margin-bottom: 5px; padding: 3px; display: block;">
+    	<input type="text" id="input-lng" placeholder="Lng DMS (contoh: 106 49 37.9)" style="width: 200px; margin-bottom: 5px; padding: 3px; display: block;">
+    	<button onclick="cariKoordinatDMS()" style="width: 100%; padding: 5px; background: #0078A8; color: white; border: none; border-radius: 3px; cursor: pointer;">Cari Titik</button>
         </div>
         <script src="js/qgis2web_expressions.js"></script>
         <script src="js/leaflet.js"></script>
@@ -870,35 +870,55 @@
         });
         lay.addTo(map);
         setBounds();
-        // Membuat variabel penampung tanda (marker) agar bisa dihapus saat mencari titik baru
+        // Fungsi mengubah format "D M S" menjadi Desimal (DD)
+function dmsKeDesimal(dmsStr) {
+    // Menghapus spasi ganda dan memecah teks berdasarkan spasi
+    var bagian = dmsStr.trim().replace(/\s+/g, ' ').split(' ');
+    
+    // Jika input kosong atau tidak diisi 3 bagian (D, M, S), kembalikan nilai bukan angka
+    if (bagian.length < 1 || dmsStr.trim() === "") return NaN;
+
+    // Mengambil nilai Derajat, Menit, Detik (jika Menit/Detik kosong, otomatis dianggap 0)
+    var d = parseFloat(bagian[0]) || 0;
+    var m = parseFloat(bagian[1]) || 0;
+    var s = parseFloat(bagian[2]) || 0;
+
+    // Cek apakah angka derajat bernilai minus (selatan atau barat)
+    var nilaiMinus = d < 0 || Object.is(d, -0);
+    
+    // Rumus konversi DMS ke Desimal (DD)
+    var desimal = Math.abs(d) + (m / 60) + (s / 3600);
+    
+    // Kembalikan tanda minus jika koordinat bernilai negatif
+    return nilaiMinus ? -desimal : desimal;
+	}
 	var markerPencarian = null;
-	function cariKoordinat() {
-    	// Mengambil nilai dari kotak input
-    	var latInput = document.getElementById('input-lat').value;
-    	var lngInput = document.getElementById('input-lng').value;
-    	// Mengubah teks input menjadi angka desimal
-    	var lat = parseFloat(latInput);
-    	var lng = parseFloat(lngInput);
-    	// Validasi apakah input berupa angka yang benar
-    	if (isNaN(lat) || isNaN(lng)) {
-        alert("Mohon masukkan format koordinat angka yang valid!");
+	function cariKoordinatDMS() {
+    var latInput = document.getElementById('input-lat').value;
+    var lngInput = document.getElementById('input-lng').value;
+    // Konversi masing-masing input DMS ke bentuk desimal
+    var lat = dmsKeDesimal(latInput);
+    var lng = dmsKeDesimal(lngInput);
+    // Validasi hasil konversi angka
+    if (isNaN(lat) || isNaN(lng)) {
+        alert("Format salah! Masukkan angka dipisahkan spasi.\nContoh: -6 10 31.4");
         return;
-    	}
-    	// Rentang validasi koordinat dunia (Latitude -90 s/d 90, Longitude -180 s/d 180)
-    	if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-        alert("Nilai koordinat di luar jangkauan peta dunia!");
+    }
+    // Validasi batas koordinat dunia
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        alert("Koordinat di luar jangkauan peta dunia!");
         return;
-    	}
-    	// Jika sebelumnya sudah ada marker pencarian, hapus dulu dari peta
-    	if (markerPencarian !== null) {
+    }
+    // Hapus marker lama jika ada
+    if (markerPencarian !== null) {
         map.removeLayer(markerPencarian);
-    	}
-    	// 1. Arahkan dan perbesar peta ke lokasi koordinat baru (Zoom level: 15)
-    	map.setView([lat, lng], 15);
-    	// 2. Tambahkan marker baru di titik tersebut beserta teks info (Popup)
-    	markerPencarian = L.marker([lat, lng]).addTo(map);
-    	markerPencarian.bindPopup("<b>Titik Koordinat Input:</b><br>Lat: " + lat + "<br>Lng: " + lng).openPopup();
-		}
+    }
+    // Gerakkan peta ke titik lokasi baru
+    map.setView([lat, lng], 15);
+    // Tambah marker baru beserta informasi koordinat desimalnya
+    markerPencarian = L.marker([lat, lng]).addTo(map);
+    markerPencarian.bindPopup("<b>Lokasi Ditemukan!</b><br>Lat (DD): " + lat.toFixed(5) + "<br>Lng (DD): " + lng.toFixed(5)).openPopup();
+	}
 		</script>        
     </body>
 </html>
