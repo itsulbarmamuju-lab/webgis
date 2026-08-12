@@ -870,27 +870,28 @@
         });
         lay.addTo(map);
         setBounds();
-        // Fungsi mengubah format "D M S" menjadi Desimal (DD)
+        // Fungsi perbaikan untuk mengubah format "D M S" menjadi Desimal (DD) secara akurat
 function dmsKeDesimal(dmsStr) {
-    // Menghapus spasi ganda dan memecah teks berdasarkan spasi
+    // Menghapus spasi ganda di awal/akhir dan memecah teks berdasarkan spasi
     var bagian = dmsStr.trim().replace(/\s+/g, ' ').split(' ');
     
-    // Jika input kosong atau tidak diisi 3 bagian (D, M, S), kembalikan nilai bukan angka
+    // Jika input kosong, kembalikan nilai bukan angka
     if (bagian.length < 1 || dmsStr.trim() === "") return NaN;
 
-    // Mengambil nilai Derajat, Menit, Detik (jika Menit/Detik kosong, otomatis dianggap 0)
+    // Mengambil nilai berdasarkan urutan: [0] Derajat, [1] Menit, [2] Detik
     var d = parseFloat(bagian[0]) || 0;
     var m = parseFloat(bagian[1]) || 0;
     var s = parseFloat(bagian[2]) || 0;
 
-    // Cek apakah angka derajat bernilai minus (selatan atau barat)
+    // Cek apakah angka derajat bernilai minus (Lintang Selatan atau Bujur Barat)
     var nilaiMinus = d < 0 || Object.is(d, -0);
     
-    // Rumus konversi DMS ke Desimal (DD)
+    // Rumus konversi DMS ke Desimal (DD) yang akurat
     var desimal = Math.abs(d) + (m / 60) + (s / 3600);
     
     // Kembalikan tanda minus jika koordinat bernilai negatif
     return nilaiMinus ? -desimal : desimal;
+	}
 	}
 	var markerPencarian = null;
 	function cariKoordinatDMS() {
