@@ -24,12 +24,12 @@
     </head>
     <body>
         <div id="map">
-		<!-- Elemen Input Koordinat DMS -->
-		<div id="koordinat-input-box" style="position: absolute; top: 10px; left: 60px; z-index: 1000; background: white; padding: 10px; border-radius: 5px; box-shadow: 0 1px 5px rgba(0,0,0,0.65); font-family: sans-serif;">
-    	<h4 style="margin: 0 0 5px 0; font-size: 14px;">Input Koordinat (DMS Spasi)</h4>
-    	<input type="text" id="input-lat" placeholder="Lat DMS (contoh: -6 10 31.4)" style="width: 200px; margin-bottom: 5px; padding: 3px; display: block;">
-    	<input type="text" id="input-lng" placeholder="Lng DMS (contoh: 106 49 37.9)" style="width: 200px; margin-bottom: 5px; padding: 3px; display: block;">
-    	<button onclick="cariKoordinatDMS()" style="width: 100%; padding: 5px; background: #0078A8; color: white; border: none; border-radius: 3px; cursor: pointer;">Cari Titik</button>
+<!-- Elemen Input Koordinat DMS -->
+<div id="koordinat-input-box" style="position: absolute; top: 10px; left: 60px; z-index: 1000; background: white; padding: 10px; border-radius: 5px; box-shadow: 0 1px 5px rgba(0,0,0,0.65); font-family: sans-serif;">
+    <h4 style="margin: 0 0 5px 0; font-size: 14px;">Input Koordinat (DMS Spasi)</h4>
+    <input type="text" id="input-lat" placeholder="Lat DMS (contoh: -6 10 31.4)" style="width: 200px; margin-bottom: 5px; padding: 3px; display: block;">
+    <input type="text" id="input-lng" placeholder="Lng DMS (contoh: 106 49 37.9)" style="width: 200px; margin-bottom: 5px; padding: 3px; display: block;">
+    <button onclick="cariKoordinatDMS()" style="width: 100%; padding: 5px; background: #0078A8; color: white; border: none; border-radius: 3px; cursor: pointer;">Cari Titik</button>
         </div>
         <script src="js/qgis2web_expressions.js"></script>
         <script src="js/leaflet.js"></script>
@@ -870,7 +870,7 @@
         });
         lay.addTo(map);
         setBounds();
-        // Fungsi perbaikan untuk mengubah format "D M S" menjadi Desimal (DD) secara akurat
+// Fungsi mengubah format "D M S" menjadi Desimal (DD)
 function dmsKeDesimal(dmsStr) {
     // Menghapus spasi ganda di awal/akhir dan memecah teks berdasarkan spasi
     var bagian = dmsStr.trim().replace(/\s+/g, ' ').split(' ');
@@ -891,35 +891,41 @@ function dmsKeDesimal(dmsStr) {
     
     // Kembalikan tanda minus jika koordinat bernilai negatif
     return nilaiMinus ? -desimal : desimal;
-	}
-	}
-	var markerPencarian = null;
-	function cariKoordinatDMS() {
+}
+var markerPencarian = null;
+
+function cariKoordinatDMS() {
     var latInput = document.getElementById('input-lat').value;
     var lngInput = document.getElementById('input-lng').value;
+
     // Konversi masing-masing input DMS ke bentuk desimal
     var lat = dmsKeDesimal(latInput);
     var lng = dmsKeDesimal(lngInput);
+
     // Validasi hasil konversi angka
     if (isNaN(lat) || isNaN(lng)) {
         alert("Format salah! Masukkan angka dipisahkan spasi.\nContoh: -6 10 31.4");
         return;
     }
+
     // Validasi batas koordinat dunia
     if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
         alert("Koordinat di luar jangkauan peta dunia!");
         return;
     }
+
     // Hapus marker lama jika ada
     if (markerPencarian !== null) {
         map.removeLayer(markerPencarian);
     }
+
     // Gerakkan peta ke titik lokasi baru
     map.setView([lat, lng], 15);
+
     // Tambah marker baru beserta informasi koordinat desimalnya
     markerPencarian = L.marker([lat, lng]).addTo(map);
     markerPencarian.bindPopup("<b>Lokasi Ditemukan!</b><br>Lat (DD): " + lat.toFixed(5) + "<br>Lng (DD): " + lng.toFixed(5)).openPopup();
-	}
-		</script>        
+}
+        </script>        
     </body>
 </html>
